@@ -6,6 +6,7 @@ var ADDRESS = '0.0.0.0'
 var socketId = 0;
 var connectedSocketCache = {};
 var activeUsernames = {};
+var stillLooping = false;
 
 var server = net.createServer(socketConnected);
 server.listen(PORT, function(){
@@ -35,6 +36,7 @@ function socketConnected(socket){
   });
   socket.setEncoding('utf8');
   socket.on('data',function(chunk){
+    console.log('gong top loop')
     console.log('connectedSocketCache all connected',Object.keys(connectedSocketCache))
     process.stdout.write(chunk);
     if(!socket.username){
@@ -63,8 +65,11 @@ function socketConnected(socket){
     // console.log('allsockets',allSocketsConnected)
     console.log('all connected users: ',Object.keys(activeUsernames))
   });
+
+}
   process.stdin.setEncoding('utf8');
   process.stdin.on('data',function(chunk){
+    console.log('going into this loop')
     if(chunk.substring(0,4) === 'kick'){
       var usernameToKick = chunk.split(' ')[1];
       usernameToKick = usernameToKick.substring(0,usernameToKick.length-1)
@@ -80,7 +85,7 @@ function socketConnected(socket){
 
       // console.log('usernameToKick',usernameToKick)
     }
-    else{
+    else {
       for(var k in connectedSocketCache){
         console.log('writiing to: ',activeUsernames)
         connectedSocketCache[k].write('admin said : '+chunk);
@@ -92,4 +97,3 @@ function socketConnected(socket){
 
   // 'admin: '+process.stdin.pipe(socket);
   // client.end();
-}
