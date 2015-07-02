@@ -41,16 +41,17 @@ function socketConnected(socket){
       if(chunk.substring(0, chunk.length - 1).toLowerCase() === 'admin'){
         socket.write('you are not privileged to use this username \n please enter a different username:')
       }
+      else if(chunk.indexOf(' ') >= 0){
+          socket.write('so spaces allowed inkic username \n please enter a different username:')
+      }
       else if(chunk.substring(0, chunk.length - 1) in activeUsernames){
         socket.write('This username is already taken \n please enter a different username:')
       }
       else{
         socket.username = chunk.substring(0, chunk.length - 1);
-        activeUsernames[socket.username] = true;
+        activeUsernames[socket.username] = socket.id;
+        console.log('activeUsernames',activeUsernames)
       }
-      // console.log(socket)
-      // console.log('logging chunk',chunk)
-      // console.log('new username given: '+socket.username)
     }
     else{
       for(var k in connectedSocketCache){
@@ -62,9 +63,28 @@ function socketConnected(socket){
     // console.log('allsockets',allSocketsConnected)
     console.log('all connected users: ',Object.keys(activeUsernames))
   });
+  process.stdin.setEncoding('utf8');
   process.stdin.on('data',function(chunk){
-    for(var k in connectedSocketCache){
-      connectedSocketCache[k].write('admin said : '+chunk);
+    if(chunk.substring(0,4) === 'kick'){
+      var usernameToKick = chunk.split(' ')[1];
+      usernameToKick = usernameToKick.substring(0,usernameToKick.length-1)
+      console.log('usernameToKick',usernameToKick)
+      var socketIdToKick = activeUsernames[usernameToKick];
+      console.log('socketIdToKick',socketIdToKick)
+      if(usernameToKick in activeUsernames){
+        connectedSocketCache[socketIdToKick].end('you been kicked \n');
+        delete connectedSocketCache[socketIdToKick];
+        delete activeUsernames[usernameToKick];
+        console.log('activeUsernames',activeUsernames)
+      }
+
+      // console.log('usernameToKick',usernameToKick)
+    }
+    else{
+      for(var k in connectedSocketCache){
+        console.log('writiing to: ',activeUsernames)
+        connectedSocketCache[k].write('admin said : '+chunk);
+      }
     }
   })
 
