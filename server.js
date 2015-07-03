@@ -23,6 +23,7 @@ function socketConnected(socket){
   socketId++;
   socket.id = socketId;
   connectedSocketCache[socketId] = socket;
+  socket.rateCheckerArray = [];
   socket.write('please enter username: ')
   // connectedSocketCachesocketId
   // allSocketsConnected.push(socket);
@@ -36,7 +37,6 @@ function socketConnected(socket){
   });
   socket.setEncoding('utf8');
   socket.on('data',function(chunk){
-    console.log('gong top loop')
     console.log('connectedSocketCache all connected',Object.keys(connectedSocketCache))
     process.stdout.write(chunk);
     if(!socket.username){
@@ -60,11 +60,20 @@ function socketConnected(socket){
         // console.log('username',socket.username,'after username')
         connectedSocketCache[k].write(socket.username +' said : '+chunk);
       }
+       socket.rateCheckerArray.unshift(Date.now());
+
     }
     // console.log('logging chunk',chunk)
     // console.log('allsockets',allSocketsConnected)
     console.log('all connected users: ',Object.keys(activeUsernames))
+    console.log(socket.rateCheckerArray)
+    if(socket.rateCheckerArray.length > 1){
+      if(socket.rateCheckerArray[0]-socket.rateCheckerArray[1] < 1000){
+        socket.end('you had to overdo it didnt you?')
+      }
+    }
   });
+
 
 }
   process.stdin.setEncoding('utf8');
@@ -78,9 +87,9 @@ function socketConnected(socket){
       console.log('socketIdToKick',socketIdToKick)
       if(usernameToKick in activeUsernames){
         connectedSocketCache[socketIdToKick].end('you been kicked \n');
-        delete connectedSocketCache[socketIdToKick];
-        delete activeUsernames[usernameToKick];
-        console.log('activeUsernames',activeUsernames)
+        // delete connectedSocketCache[socketIdToKick];
+        // delete activeUsernames[usernameToKick];
+        // console.log('activeUsernames',activeUsernames)
       }
 
       // console.log('usernameToKick',usernameToKick)
